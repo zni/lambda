@@ -1,5 +1,5 @@
 {-# LANGUAGE GADTs #-}
--- Simple lambda calculus reducer (AKA partial evaluator) I wrote while stuck
+-- Simple lambda calculus reducer, namely β-reduction, I wrote while stuck
 -- on the turnpike.
 --
 -- date   : 03/09/2012
