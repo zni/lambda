@@ -32,30 +32,33 @@ reduce           :: LExpr -> LExpr
 reduce v@(Var s) = v
 
 reduce l@(L bound expr) =
+    -- Check form of the lambda function.
     case bound of
         Var _ -> L bound (reduce expr)
-        _     -> undefined
+        _     -> error "lambda function argument must be an atom."
 
 reduce a@(App left right) =
     let right' = reduce right
     in replaceBound left right'
-    where
-          replaceBound :: LExpr -> LExpr -> LExpr
-          replaceBound (L var body) val =
-              let (Var s) = var
-                  body'   = mapVal s body val
-              in body'
-              where mapVal :: String -> LExpr -> LExpr -> LExpr
-                    mapVal name p@(Var n) val      = if name == n then val else p
-                    mapVal name (L bound@(Var b) expr) val = 
-                      if name == b
-                          then mapVal name expr val
-                          else L bound (mapVal name expr val)
-                    mapVal v (App l r) val = (App (mapVal v l val)
-                                                  (mapVal v r val))
 
-          replaceBound l@(Var _) r@(Var _) = App l r
-          replaceBound a@(App lexp rexp) val = replaceBound (reduce a) val
+-- Replace occurrences of bound variables with the applied value.
+replaceBound :: LExpr -> LExpr -> LExpr
+replaceBound l@(Var _) r@(Var _)   = App l r
+replaceBound a@(App lexp rexp) val = replaceBound (reduce a) val
+replaceBound l@(Var _)         val = App l val
+replaceBound (L var body)      val =
+  let (Var s) = var
+      body'   = mapVal s body val
+  in body'
+  where mapVal :: String -> LExpr -> LExpr -> LExpr
+        mapVal name p@(Var n) val      = if name == n then val else p
+        mapVal name (L bound@(Var b) expr) val = 
+          if name == b
+              then mapVal name expr val
+              else L bound (mapVal name expr val)
+        mapVal v (App l r) val = (App (mapVal v l val)
+                                      (mapVal v r val))
+
 
 --
 -- Some simple expressions.
